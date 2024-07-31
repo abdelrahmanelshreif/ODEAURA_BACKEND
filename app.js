@@ -21,11 +21,7 @@ const app = express()
 // middlewares
 
 app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-)
+  cors());
 app.use(express.json()) // parse incoming requests with JSON payloads
 app.use(cookieParser())
 
