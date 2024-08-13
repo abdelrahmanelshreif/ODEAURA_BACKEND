@@ -10,6 +10,7 @@ const validateShippingAddressInput = (req, res, next) => {
       state: Joi.string().required(),
       zip: Joi.string().required(),
       country: Joi.string().required(),
+      mobileNumber: Joi.string().required(),
     }),
   })
 

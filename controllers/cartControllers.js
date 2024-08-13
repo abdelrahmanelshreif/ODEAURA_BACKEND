@@ -9,19 +9,37 @@ const {
 } = require('../utils/cartUtils')
 const stripe = require('stripe')('')
 
+// const getMyCart = async (req, res) => {
+//   const userId = res.locals.user._id
+//   try {
+//     let cart = await getCart(userId)
+//     cart = await getCartWithProductDetails(cart._id)
+
+//     res.json(cart)
+//   } catch (err) {
+//     console.log(err)
+//     return res.status(500).json({ message: 'Internal server error' })
+//   }
+// }
 const getMyCart = async (req, res) => {
-  const userId = res.locals.user._id
-  try {
-    let cart = await getCart(userId)
-    cart = await getCartWithProductDetails(cart._id)
-
-    res.json(cart)
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({ message: 'Internal server error' })
+  const user = res.locals.user;
+  
+  if (!user) {
+    return res.status(401).json({ message: 'Unauthorized' }); // User is not authenticated
   }
-}
+  
+  const userId = user._id;
 
+  try {
+    let cart = await getCart(userId);
+    cart = await getCartWithProductDetails(cart._id);
+
+    res.json(cart);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
 const addProductToCart = async (req, res) => {
   const productId = req.params.productId
   const userId = res.locals.user._id

@@ -4,24 +4,42 @@ const { User } = require('../models/User')
 
 const getAllOrders = async (req, res) => {
   try {
-    let orders = await Order.find().populate(
-      'userId',
-      '_id firstName lastName email photo'
-    )
+    // Find all orders and populate userId and product details
+    let orders = await Order.find()
+      .populate({
+        path: 'userId',
+        select: '_id firstName lastName email photo'
+      })
+      .populate({
+        path: 'items.productId',
+        select: '_id name price image'
+      });
 
-    res.status(200).json({ ordersNo: orders.length, orders })
+    // Transform the orders to include product details directly in each item
+    orders = orders.map(order => {
+      order.items = order.items.map(item => ({
+        ...item._doc,
+        productDetails: item.productId // Adding the product details directly
+      }));
+      return order;
+    });
+
+    res.status(200).json({ ordersNo: orders.length, orders });
   } catch (err) {
-    console.log(err)
-    return res.status(500).json({ message: 'Internal server error.' })
+    console.log(err);
+    return res.status(500).json({ message: 'Internal server error.' });
   }
-}
+};
 
 const getUserOrders = async (req, res) => {
   const userId = req.params.userId
   try {
     const user = await User.findOne({ _id: userId })
     if (user) {
-      const orders = await Order.find({ userId })
+      const orders = await Order.find({ userId }).populate({
+        path: 'items.productId',
+        select: '_id name price image'
+      });
       delete user._doc.password
       res.status(200).json({ user, ordersNo: orders.length, orders })
     } else {
@@ -82,7 +100,10 @@ const deleteOrder = async (req, res) => {
 const getMyOrders = async (req, res) => {
   const userId = res.locals.user._id
   try {
-    const orders = await Order.find({ userId })
+    const orders = await Order.find({ userId }).populate({
+      path: 'items.productId',
+      select: '_id name price image'
+    });
     if (!orders) return res.status(404).json('Orders not found.')
     res.json({ ordersNo: orders.length, orders })
   } catch (err) {
